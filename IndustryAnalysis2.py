@@ -1,3 +1,5 @@
+import math
+
 def getData(xFile, yFile):
     with open(xFile, "r") as dataset:
         list = dataset.read().strip("null").strip("'").split()
@@ -55,6 +57,10 @@ def errorAnalysis(modelA, modelB):
     pctError = abs((modelB.get("a") - modelA.get("a"))/modelA.get("a"))
     return(pctError)
 
+def CCErrorAnalysis(ccA, ccB):
+    pctError = abs((ccB - ccA)/ccA)
+    return(pctError)
+
 def guessIndustry(techModel, enerModel, testModel):
     testToTech = errorAnalysis(techModel, testModel)
     testToEner = errorAnalysis(enerModel, testModel)
@@ -64,10 +70,48 @@ def guessIndustry(techModel, enerModel, testModel):
     elif testToTech > testToEner:
         print("I think this is an ENERGY company.")
 
-# print("TECH: ", generateModel(getData("techX.txt", "techY.txt")))
-# print("ENER: ", generateModel(getData("enerX.txt", "enerY.txt")))
-# print("UNKW: ", generateModel(getData("testX.txt", "testY.txt")))
+
+def correlCoeff(dataCoords):
+    n = float(len(dataCoords.get('x')))
+    sumXY = 0.0
+    sumX = 0.0
+    sumY = 0.0
+    sumX2 = 0.0
+    sumY2 = 0.0
+    for j in range(0, int(n)):
+        sumX += float(dataCoords.get("x")[j])
+
+    for k in range(0, int(n)):
+        sumY += float(dataCoords.get("y")[k])
+
+    for i in range(0, int(n)):
+        sumXY += float(dataCoords.get("x")[i]) * float(dataCoords.get("y")[i])
+
+    for l in range(0, int(n)):
+        sumX2 += float(dataCoords.get("x")[l]) ** 2
+
+    for m in range(0, int(n)):
+        sumY2 += float(dataCoords.get("y")[m]) ** 2
+
+    r = ((n*sumXY) - (sumX*sumY)) / math.sqrt( (n*sumX2 - (sumX)**2)*(n*sumY2)-(sumY)**2 )
+
+    return(r)
+
+def CCGuessIndustry(techCC, enerCC, testCC):
+    testToTech = CCErrorAnalysis(techCC, testCC)
+    testToEner = CCErrorAnalysis(enerCC, testCC)
+
+    if testToTech < testToEner:
+        print("I think this is a TECH company.")
+    elif testToTech > testToEner:
+        print("I think this is an ENERGY company.")
+
+# print("TECH: ", generateModel(getData("modelTechX.txt", "modelTechY.txt")))
+# print("ENER: ", generateModel(getData("modelEnerX.txt", "modelEnerY.txt")))
+# # print("UNKW: ", generateModel(getData("testX.txt", "testY.txt")))
 
 guessIndustry( generateModel(getData("modelTechX.txt", "modelTechY.txt")),
                 generateModel(getData("modelEnerX.txt", "modelEnerY.txt")),
                 generateModel(getData("testX.txt", "testY.txt")) )
+
+CCGuessIndustry(correlCoeff(getData("modelTechX.txt", "modelTechY.txt")), correlCoeff(getData("modelEnerX.txt", "modelEnerY.txt")), correlCoeff(getData("testX.txt", "testY.txt")))
